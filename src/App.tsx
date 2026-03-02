@@ -63,6 +63,11 @@ function App() {
   const [showLabels, setShowLabels] = useState(true)
   const [autoHint, setAutoHint] = useState<string | null>(null)
   const [tutorialActive, setTutorialActive] = useState(true)
+  
+  // --- MOBILE OPTIMIZATION STATE ---
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [showMobileTutorial, setShowMobileTutorial] = useState(false)
 
   const [isDetached, setIsDetached] = useState(false);
   const [logPos, setLogPos] = useState({ x: window.innerWidth - 355, y: 580 });
@@ -71,7 +76,21 @@ function App() {
   const logPlaceholderRef = useRef<HTMLDivElement>(null);
 
   const currentLevel = LEVELS[levelIndex]
-  const showTutorial = levelIndex === 0 && tutorialActive;
+  const showTutorial = levelIndex === 0 && tutorialActive && !isMobile;
+
+  useEffect(() => {
+    const checkMobile = () => {
+        const mobileMatch = window.matchMedia("(max-width: 768px)").matches;
+        setIsMobile(mobileMatch);
+        if (mobileMatch) {
+            setMobileSidebarOpen(false); // Start collapsed on mobile
+            setShowMobileTutorial(true);
+        }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (levelIndex > 0) setIsHeaderCollapsed(true);
@@ -234,6 +253,11 @@ function App() {
   const subBg = theme === 'dark' ? '#0a0a0a' : '#fff';
   const borderColor = theme === 'dark' ? '#222' : '#ddd';
 
+  // --- MOBILE LAYOUT LOGIC ---
+  const sidebarPosition = isMobile 
+    ? { position: 'absolute', top: 0, left: mobileSidebarOpen ? 0 : '100vw', transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)', width: '100vw' } 
+    : { width: '380px' };
+
   const logContent = (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: subBg }}>
         <div onMouseDown={startDrag} style={{ ...dragHandleStyle, background: theme === 'dark' ? '#111' : '#eee', borderColor, color: theme === 'dark' ? '#444' : '#888', cursor: isDragging ? 'grabbing' : 'grab' }}>
@@ -243,7 +267,7 @@ function App() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px', scrollbarWidth: 'none' }}>
             {operations.length === 0 && <div style={{ fontSize: '10px', color: '#333', textAlign: 'center', padding: '10px' }}>NO_RECORDS</div>}
             {operations.map((op, i) => (
-                <div key={op.id} onClick={() => setActiveStep(i + 1)} style={{ 
+                <div key={op.id} onClick={() => { setActiveStep(i + 1); if(isMobile) setMobileSidebarOpen(false); }} style={{ 
                     ...opItemStyle, borderColor, opacity: (i+1) > activeStep ? 0.3 : 1, 
                     background: (i+1) === activeStep ? (theme === 'dark' ? '#1a1a1a' : '#f0f0f0') : 'transparent'
                 }}>
@@ -265,19 +289,42 @@ function App() {
       <div style={{ flex: 1, position: 'relative' }}>
         <Viewport currentLevel={currentLevel} userOperations={activeOpsToRender} theme={theme} showLabels={showLabels} setShowLabels={(s)=>{ startGameplay(); setShowLabels(s); }} onMeshUpdated={(_, f)=>setLevelProgress(f)} />
         
-        {/* THEME TOGGLE */}
-        <button 
-            onClick={() => { startGameplay(); setTheme(t => t === 'dark' ? 'light' : 'dark'); }}
-            style={{ position: 'absolute', top: '20px', left: '20px', background: 'transparent', border: 'none', color: '#444', padding: '10px', cursor: 'pointer', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-45deg)' }}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-            <div style={{ width: '10px', height: '4px', border: '1px solid currentColor', borderRadius: '2px 2px 0 0', position: 'relative', background: theme === 'light' ? 'currentColor' : 'transparent' }}>
-                <div style={{ width: '6px', height: '8px', border: '1px solid currentColor', position: 'absolute', top: '4px', left: '2px', borderRadius: '0 0 1px 1px' }} />
-                {theme === 'light' && <div style={{ position: 'absolute', top: '-12px', left: '-4px', width: '18px', height: '18px', background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)', pointerEvents: 'none' }} />}
-            </div>
-        </button>
+        {/* MOBILE CONTROLS */}
+        {isMobile && (
+            <>
+                {/* FLOATING MOBILE TOGGLE */}
+                <button 
+                    onClick={() => { setMobileSidebarOpen(!mobileSidebarOpen); setShowMobileTutorial(false); }}
+                    style={{ position: 'absolute', bottom: '20px', right: '20px', width: '50px', height: '50px', borderRadius: '25px', background: '#f1c40f', color: '#000', border: '2px solid #000', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.5)', cursor: 'pointer', animation: showMobileTutorial ? 'pulse 1.5s infinite ease-in-out' : 'none' }}
+                >
+                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{mobileSidebarOpen ? '×' : '≡'}</span>
+                </button>
 
-        {/* TUTORIAL OVERLAY (Level 1 only) */}
+                {/* MOBILE TUTORIAL POPUP */}
+                {showMobileTutorial && (
+                    <div style={{ position: 'absolute', bottom: '80px', right: '20px', background: '#f1c40f', color: '#000', padding: '12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', width: '180px', border: '1px solid #000', zIndex: 40, boxShadow: '0 8px 30px rgba(0,0,0,0.5)' }}>
+                        MOBILE MODE: Tap the yellow button to open CAD controls. Orbit/Zoom using touch gestures.
+                        <div style={{ position: 'absolute', bottom: '-10px', right: '15px', width: 0, height: 0, borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderTop: '10px solid #f1c40f' }} />
+                    </div>
+                )}
+            </>
+        )}
+
+        {/* THEME TOGGLE */}
+        {(!isMobile || mobileSidebarOpen) && (
+            <button 
+                onClick={() => { startGameplay(); setTheme(t => t === 'dark' ? 'light' : 'dark'); }}
+                style={{ position: 'absolute', top: '20px', left: '20px', background: 'transparent', border: 'none', color: '#444', padding: '10px', cursor: 'pointer', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-45deg)' }}
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+                <div style={{ width: '10px', height: '4px', border: '1px solid currentColor', borderRadius: '2px 2px 0 0', position: 'relative', background: theme === 'light' ? 'currentColor' : 'transparent' }}>
+                    <div style={{ width: '6px', height: '8px', border: '1px solid currentColor', position: 'absolute', top: '4px', left: '2px', borderRadius: '0 0 1px 1px' }} />
+                    {theme === 'light' && <div style={{ position: 'absolute', top: '-12px', left: '-4px', width: '18px', height: '18px', background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)', pointerEvents: 'none' }} />}
+                </div>
+            </button>
+        )}
+
+        {/* TUTORIAL OVERLAY (Level 1 only, Hidden on Mobile) */}
         {showTutorial && (
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 100 }}>
                 <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(241, 196, 15, 0.95)', color: '#000', padding: '12px 40px', borderRadius: '4px', border: '1px solid #000', zIndex: 1000, textAlign: 'center', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
@@ -399,7 +446,13 @@ function App() {
 
       {isDetached && <div style={{ ...detachedLogStyle, left: logPos.x, top: logPos.y, opacity: isDragging ? 0.8 : 1 }}>{logContent}</div>}
 
-      <div style={{ width: '380px', background: sidebarBg, color: sidebarColor, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${borderColor}`, zIndex: 10 }}>
+      <div style={{ ...(sidebarPosition as any), height: '100vh', background: sidebarBg, color: sidebarColor, display: 'flex', flexDirection: 'column', borderLeft: isMobile ? 'none' : `1px solid ${borderColor}`, zIndex: isMobile ? 100 : 10 }}>
+        {isMobile && (
+             <div style={{ padding: '15px 20px', borderBottom: `1px solid ${borderColor}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#000', color: '#f1c40f' }}>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', letterSpacing: '2px' }}>CAD_CONTROLS</span>
+                <button onClick={() => setMobileSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#f1c40f', fontSize: '18px', cursor: 'pointer' }}>[X]</button>
+             </div>
+        )}
         <div style={{ padding: isHeaderCollapsed ? '15px 25px' : '30px', borderBottom: `1px solid ${borderColor}`, position: 'relative' }}>
           {!isHeaderCollapsed ? (
             <div style={{ position: 'relative' }}>
@@ -447,19 +500,23 @@ function App() {
                     <span style={{ color: sidebarColor }}>{operations[activeStep-1].type.toUpperCase()}</span>
                 </div>
                 <div style={controlRowStyle}><span style={controlLabelStyle}>MOVE</span>
-                    {['X','Y','Z'].map((axis, i) => <div key={axis} style={{ ...btnGroupStyle, borderColor }}>
-                        <button onClick={()=>adjustTransform('translate',i,-10)} style={{ ...tBtn, color: sidebarColor }}>-</button>
-                        <span style={{ fontSize: '8px', padding: '0 3px', color: '#444' }}>{axis}</span>
-                        <button onClick={()=>adjustTransform('translate',i,10)} style={{ ...tBtn, color: sidebarColor }}>+</button>
-                    </div>)}
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {['X','Y','Z'].map((axis, i) => <div key={axis} style={{ ...btnGroupStyle, borderColor }}>
+                            <button onClick={()=>adjustTransform('translate',i,-10)} style={{ ...tBtn, color: sidebarColor }}>-</button>
+                            <span style={{ fontSize: '8px', padding: '0 3px', color: '#444' }}>{axis}</span>
+                            <button onClick={()=>adjustTransform('translate',i,10)} style={{ ...tBtn, color: sidebarColor }}>+</button>
+                        </div>)}
+                    </div>
                 </div>
                 <div style={{ ...controlRowStyle, marginBottom: '15px' }}><span style={controlLabelStyle}>SIZE</span>
-                    {['X','Y','Z'].map((axis, i) => <div key={axis} style={{ ...btnGroupStyle, borderColor }}>
-                        <button onClick={()=>adjustTransform('scale',i,-0.1)} style={{ ...tBtn, color: sidebarColor }}>-</button>
-                        <span style={{ fontSize: '8px', padding: '0 3px', color: '#444' }}>{axis}</span>
-                        <button onClick={()=>adjustTransform('scale',i,0.1)} style={{ ...tBtn, color: sidebarColor }}>+</button>
-                    </div>)}
-                    <button onClick={() => setShowNumericInput(!showNumericInput)} style={{ ...rBtn, color: sidebarColor, background: theme === 'dark' ? '#1a1a1a' : '#eee', borderColor, marginLeft: '5px', padding: '2px 6px' }}>...</button>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {['X','Y','Z'].map((axis, i) => <div key={axis} style={{ ...btnGroupStyle, borderColor }}>
+                            <button onClick={()=>adjustTransform('scale',i,-0.1)} style={{ ...tBtn, color: sidebarColor }}>-</button>
+                            <span style={{ fontSize: '8px', padding: '0 3px', color: '#444' }}>{axis}</span>
+                            <button onClick={()=>adjustTransform('scale',i,0.1)} style={{ ...tBtn, color: sidebarColor }}>+</button>
+                        </div>)}
+                        <button onClick={() => setShowNumericInput(!showNumericInput)} style={{ ...rBtn, color: sidebarColor, background: theme === 'dark' ? '#1a1a1a' : '#eee', borderColor, marginLeft: '5px', padding: '2px 6px' }}>...</button>
+                    </div>
                 </div>
 
                 {showNumericInput && (
@@ -490,7 +547,9 @@ function App() {
                 )}
 
                 <div style={controlRowStyle}><span style={controlLabelStyle}>TURN</span>
-                    {['X','Y','Z'].map((axis, i) => <button key={axis} onClick={()=>adjustTransform('rotation',i,90)} style={{ ...rBtn, color: sidebarColor, background: theme === 'dark' ? '#1a1a1a' : '#eee', borderColor }}>{axis} 90°</button>)}
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {['X','Y','Z'].map((axis, i) => <button key={axis} onClick={()=>adjustTransform('rotation',i,90)} style={{ ...rBtn, color: sidebarColor, background: theme === 'dark' ? '#1a1a1a' : '#eee', borderColor }}>{axis} 90°</button>)}
+                    </div>
                 </div>
             </div>
           )}
@@ -509,7 +568,7 @@ function App() {
                 <div onMouseEnter={() => setHoverNext(true)} onMouseLeave={() => setHoverNext(false)} style={{ cursor: levelProgress < 70 ? 'help' : 'pointer' }}>
                     <button 
                         disabled={levelProgress < 70} 
-                        onClick={nextLevel} 
+                        onClick={() => { nextLevel(); if(isMobile) setMobileSidebarOpen(false); }} 
                         className={levelProgress >= 99.8 ? "perfect-pulse" : ""} 
                         style={{ ...nextBtnStyle, background: theme === 'dark' ? '#eee' : '#222', color: theme === 'dark' ? '#000' : '#fff', opacity: levelProgress < 70 ? 0.5 : 1, pointerEvents: levelProgress < 70 ? 'none' : 'auto' }}
                     >
@@ -526,7 +585,7 @@ function App() {
                 <div onMouseEnter={() => setHoverNext(true)} onMouseLeave={() => setHoverNext(false)} style={{ cursor: levelProgress < 70 ? 'help' : 'pointer' }}>
                     <button 
                         disabled={levelProgress < 70} 
-                        onClick={nextLevel} 
+                        onClick={() => { nextLevel(); if(isMobile) setMobileSidebarOpen(false); }} 
                         className={levelProgress >= 99.8 ? "perfect-pulse" : ""} 
                         style={{ ...minimalNextBtn, background: theme === 'dark' ? '#eee' : '#222', color: theme === 'dark' ? '#000' : '#fff', opacity: levelProgress >= 70 ? 1 : 0.2, width: hoverNext ? 'auto' : '35px', pointerEvents: levelProgress < 70 ? 'none' : 'auto' }}
                     >
