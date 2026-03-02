@@ -52,12 +52,9 @@ function App() {
   const [showBlueprint, setShowBlueprint] = useState(false)
   const [blueprintUsed, setBlueprintUsed] = useState(false)
   const [hoverNext, setHoverNext] = useState(false)
-  const [showNumericInput, setShowNumericInput] = useState(false)
   const [isGameComplete, setIsGameComplete] = useState(false)
-  const [showExtraHint, setShowExtraHint] = useState(false)
   const [secretClickCount, setSecretClickCount] = useState(0)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const [inputStates, setInputStates] = useState<string[]>(["1", "1", "1", "1"])
   const [expandedTip, setExpandedTip] = useState<string | null>(null)
   const [showPerfectWarning, setShowPerfectWarning] = useState(false)
   const [showLabels, setShowLabels] = useState(true)
@@ -100,18 +97,8 @@ function App() {
     setLevelProgress(0);
     setBlueprintUsed(false);
     setActiveStep(0);
-    setShowExtraHint(false);
     setSecretClickCount(0);
   }, [levelIndex]);
-
-  useEffect(() => {
-    if (activeStep > 0) {
-        const op = operations[activeStep - 1];
-        if (op && op.scale) {
-            setInputStates([ String(op.scale[0]), String(op.scale[1]), String(op.scale[2]), String(op.scale[0]) ]);
-        }
-    }
-  }, [activeStep, operations]);
 
   useEffect(() => {
     if (moveCount > currentLevel.minMoves * 2 && levelProgress < 99.8) {
@@ -180,28 +167,6 @@ function App() {
       newOps[activeStep - 1] = targetOp;
       setOperations(newOps);
       setMoveCount(prev => prev + 1);
-  }
-
-  const setNumericTransform = (type: 'translate' | 'scale' | 'rotation', axis: number, value: number) => {
-      startGameplay();
-      if (activeStep === 0) return;
-      const newOps = [...operations];
-      const targetOp = { ...newOps[activeStep - 1] };
-      const arr = [...(targetOp[type] || (type === 'scale' ? [1,1,1] : [0,0,0]))];
-      arr[axis] = value;
-      targetOp[type] = arr;
-      newOps[activeStep - 1] = targetOp;
-      setOperations(newOps);
-  }
-
-  const setUniformScale = (val: number) => {
-      startGameplay();
-      if (activeStep === 0) return;
-      const newOps = [...operations];
-      const targetOp = { ...newOps[activeStep - 1] };
-      targetOp.scale = [val, val, val];
-      newOps[activeStep - 1] = targetOp;
-      setOperations(newOps);
   }
 
   const nextLevel = () => {
@@ -492,7 +457,7 @@ function App() {
           </div>
         </div>
 
-        {/* PINNED FOOTER FOR MOBILE/DESKTOP */}
+        {/* PINNED FOOTER */}
         <div style={{ padding: '20px 25px', borderTop: `1px solid ${borderColor}`, background: subBg, zIndex: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
                 <span style={{ color: '#444', fontSize: '9px', fontWeight: 'bold' }}>FIDELITY</span>
@@ -509,8 +474,31 @@ function App() {
         </div>
       </div>
 
+      {floatingScores.map(score => ( <div key={score.id} className="floating-score" style={{ position: 'fixed', left: score.x, top: score.y, color: '#2ecc71', fontWeight: 'bold', fontSize: '20px', pointerEvents: 'none', zIndex: 1000 }}>{score.value}</div> ))}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-80px); } }
+        .floating-score { animation: floatUp 1.5s forwards ease-out; }
+        
+        .perfect-pop {
+            animation: textPulse 1.5s infinite ease-in-out;
+            color: #fff !important;
+            display: inline-block;
+        }
+        @keyframes textPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .perfect-pulse {
+            animation: pulse-glow 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(241, 196, 15, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); }
+        }
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(241, 196, 15, 0); }
