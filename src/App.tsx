@@ -51,7 +51,6 @@ function App() {
   const [levelProgress, setLevelProgress] = useState(0)
   const [showBlueprint, setShowBlueprint] = useState(false)
   const [blueprintUsed, setBlueprintUsed] = useState(false)
-  const [hoverNext, setHoverNext] = useState(false)
   const [isGameComplete, setIsGameComplete] = useState(false)
   const [secretClickCount, setSecretClickCount] = useState(0)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
@@ -211,7 +210,6 @@ function App() {
 
   const isAdvancedMode = (levelIndex + 1) >= 4;
   const activeOpsToRender = operations.slice(0, activeStep);
-  const grade = getFidelityGrade(levelProgress);
 
   const sidebarBg = theme === 'dark' ? '#111' : '#f5f5f5';
   const sidebarColor = theme === 'dark' ? '#eee' : '#222';
