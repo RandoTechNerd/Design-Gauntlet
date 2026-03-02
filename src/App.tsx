@@ -184,14 +184,6 @@ function App() {
     }
   }
 
-  const getFidelityGrade = (prog: number) => {
-      if (prog >= 99.8) return { text: "PERFECT", bonus: 100 };
-      if (prog >= 95) return { text: "CLOSE ENOUGH", bonus: 50 };
-      if (prog >= 85) return { text: "GOOD FIT", bonus: 20 };
-      if (prog >= 70) return { text: "TOO BIG BUT WILL LET IT SLIDE", bonus: 0 };
-      return { text: "NEEDS ADJUSTMENT", bonus: -10 };
-  }
-
   const startDrag = (e: React.MouseEvent) => {
       setIsDragging(true);
       const startX = isDetached ? logPos.x : (window.innerWidth - 380 + 25);
