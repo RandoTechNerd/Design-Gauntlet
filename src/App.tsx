@@ -255,7 +255,7 @@ function App() {
 
   // --- MOBILE LAYOUT LOGIC ---
   const sidebarPosition = isMobile 
-    ? { position: 'absolute', top: 0, left: mobileSidebarOpen ? 0 : '100vw', transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)', width: '100vw' } 
+    ? { position: 'absolute', top: 0, left: mobileSidebarOpen ? '15vw' : '100vw', transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)', width: '85vw' } 
     : { width: '380px' };
 
   const logContent = (
@@ -295,6 +295,14 @@ function App() {
       {/* 2. MOBILE HUD: Top-most UI Layer for mobile */}
       {isMobile && (
           <>
+            {/* CLICKABLE BACKDROP (When sidebar open) */}
+            {mobileSidebarOpen && (
+                <div 
+                    onClick={() => setMobileSidebarOpen(false)}
+                    style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 5000, cursor: 'pointer' }}
+                />
+            )}
+
             {/* STARTUP TITLE */}
             {levelIndex === 0 && tutorialActive && (
                 <div style={{ position: 'absolute', top: '15vh', left: '0', width: '100%', textAlign: 'center', pointerEvents: 'none', zIndex: 9000 }}>
@@ -305,16 +313,16 @@ function App() {
 
             {/* MOBILE TUTORIAL POPUP */}
             {showMobileTutorial && (
-                <div style={{ position: 'absolute', bottom: '110px', right: '20px', background: '#f1c40f', color: '#000', padding: '15px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', width: '220px', border: '2px solid #000', zIndex: 9000, boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
+                <div style={{ position: 'absolute', top: '100px', right: '20px', background: '#f1c40f', color: '#000', padding: '15px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', width: '220px', border: '2px solid #000', zIndex: 9000, boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
                     CAD MODE: Open this menu to add shapes and move them. Use touch to orbit the 3D grid.
-                    <div style={{ position: 'absolute', bottom: '-15px', right: '20px', width: 0, height: 0, borderLeft: '15px solid transparent', borderRight: '15px solid transparent', borderTop: '15px solid #f1c40f' }} />
+                    <div style={{ position: 'absolute', top: '-15px', right: '20px', width: 0, height: 0, borderLeft: '15px solid transparent', borderRight: '15px solid transparent', borderBottom: '15px solid #f1c40f' }} />
                 </div>
             )}
 
-            {/* FLOATING MOBILE TOGGLE (The "Joystick") */}
+            {/* FLOATING MOBILE TOGGLE - NOW IN TOP RIGHT */}
             <button 
                 onClick={() => { setMobileSidebarOpen(!mobileSidebarOpen); setShowMobileTutorial(false); }}
-                style={{ position: 'absolute', bottom: '30px', right: '30px', width: '64px', height: '64px', borderRadius: '32px', background: '#f1c40f', color: '#000', border: '3px solid #000', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.6)', cursor: 'pointer', animation: showMobileTutorial ? 'pulse 1.2s infinite ease-in-out' : 'none' }}
+                style={{ position: 'absolute', top: '25px', right: '25px', width: '64px', height: '64px', borderRadius: '32px', background: '#f1c40f', color: '#000', border: '3px solid #000', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.6)', cursor: 'pointer', animation: showMobileTutorial ? 'pulse 1.2s infinite ease-in-out' : 'none' }}
             >
                 <span style={{ fontSize: '32px', fontWeight: 'bold' }}>{mobileSidebarOpen ? '×' : '≡'}</span>
             </button>
@@ -484,7 +492,8 @@ function App() {
           </div>
         </div>
 
-        <div style={{ padding: '20px 25px', borderTop: `1px solid ${borderColor}`, background: subBg }}>
+        {/* PINNED FOOTER FOR MOBILE/DESKTOP */}
+        <div style={{ padding: '20px 25px', borderTop: `1px solid ${borderColor}`, background: subBg, zIndex: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
                 <span style={{ color: '#444', fontSize: '9px', fontWeight: 'bold' }}>FIDELITY</span>
                 <span className={levelProgress >= 99.8 ? "perfect-pop" : ""} style={{ color: sidebarColor, fontSize: '12px', fontWeight: 'bold' }}>{Math.floor(levelProgress)}%</span>
