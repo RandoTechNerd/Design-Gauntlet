@@ -285,13 +285,22 @@ function App() {
   );
 
   return (
-    <div className="App" style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, overflow: 'hidden', display: 'flex', backgroundColor: subBg, fontFamily: '"IBM Plex Mono", monospace', color: sidebarColor }}>
-      <div style={{ flex: 1, position: 'relative' }}>
+    <div className="App" style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, overflow: 'hidden', display: 'flex', position: 'relative', backgroundColor: subBg, fontFamily: '"IBM Plex Mono", monospace', color: sidebarColor }}>
+      {/* VIEWPORT CONTAINER: Always 100% on mobile, flex-1 on desktop */}
+      <div style={{ flex: 1, position: 'relative', height: '100%', width: isMobile ? '100vw' : 'auto' }}>
         <Viewport currentLevel={currentLevel} userOperations={activeOpsToRender} theme={theme} showLabels={showLabels} setShowLabels={(s)=>{ startGameplay(); setShowLabels(s); }} onMeshUpdated={(_, f)=>setLevelProgress(f)} />
         
         {/* MOBILE CONTROLS */}
         {isMobile && (
             <>
+                {/* PERSISTENT MOBILE HEADER (Startup Only) */}
+                {levelIndex === 0 && tutorialActive && (
+                    <div style={{ position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', pointerEvents: 'none', zIndex: 30 }}>
+                        <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', letterSpacing: '4px', textTransform: 'uppercase', color: sidebarColor, textShadow: theme === 'dark' ? '0 2px 10px rgba(0,0,0,0.8)' : '0 2px 10px rgba(255,255,255,0.8)' }}>Design Gauntlet</h1>
+                        <div style={{ fontSize: '8px', color: '#888', marginTop: '4px', letterSpacing: '1px' }}>TAP YELLOW BUTTON [≡] FOR CAD CONTROLS</div>
+                    </div>
+                )}
+
                 {/* FLOATING MOBILE TOGGLE */}
                 <button 
                     onClick={() => { setMobileSidebarOpen(!mobileSidebarOpen); setShowMobileTutorial(false); }}

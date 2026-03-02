@@ -173,6 +173,19 @@ const Viewport: React.FC<ViewportProps> = ({ currentLevel, onMeshUpdated, userOp
     const p2 = new THREE.PointLight(0xffffff, 0.6); p2.position.set(-500, -500, 200); scene.add(p2);
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
+    // --- RESIZE OBSERVER ---
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            if (stateRef.current.renderer && stateRef.current.camera) {
+                stateRef.current.renderer.setSize(width, height);
+                stateRef.current.camera.aspect = width / height;
+                stateRef.current.camera.updateProjectionMatrix();
+            }
+        }
+    });
+    resizeObserver.observe(mountRef.current);
+
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
@@ -185,6 +198,7 @@ const Viewport: React.FC<ViewportProps> = ({ currentLevel, onMeshUpdated, userOp
 
     return () => {
         cancelAnimationFrame(animationId);
+        resizeObserver.disconnect();
         renderer.dispose();
         if (mountRef.current) mountRef.current.removeChild(renderer.domElement);
     };
