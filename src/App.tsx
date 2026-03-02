@@ -314,12 +314,19 @@ function App() {
         {(!isMobile || mobileSidebarOpen) && (
             <button 
                 onClick={() => { startGameplay(); setTheme(t => t === 'dark' ? 'light' : 'dark'); }}
-                style={{ position: 'absolute', top: '20px', left: '20px', background: 'transparent', border: 'none', color: '#444', padding: '10px', cursor: 'pointer', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-45deg)' }}
+                style={{ position: 'absolute', top: '25px', left: '25px', background: 'transparent', border: 'none', color: '#444', padding: '10px', cursor: 'pointer', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(135deg)' }}
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-                <div style={{ width: '10px', height: '4px', border: '1px solid currentColor', borderRadius: '2px 2px 0 0', position: 'relative', background: theme === 'light' ? 'currentColor' : 'transparent' }}>
-                    <div style={{ width: '6px', height: '8px', border: '1px solid currentColor', position: 'absolute', top: '4px', left: '2px', borderRadius: '0 0 1px 1px' }} />
-                    {theme === 'light' && <div style={{ position: 'absolute', top: '-12px', left: '-4px', width: '18px', height: '18px', background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)', pointerEvents: 'none' }} />}
+                <div style={{ width: '12px', height: '16px', position: 'relative' }}>
+                    {/* Flashlight Head (Wide Part) */}
+                    <div style={{ width: '12px', height: '5px', border: '1px solid currentColor', borderRadius: '1px 1px 5px 5px', position: 'absolute', top: 0, left: 0, background: theme === 'light' ? 'currentColor' : 'transparent' }} />
+                    {/* Flashlight Body (Cylinder) */}
+                    <div style={{ width: '6px', height: '10px', border: '1px solid currentColor', borderRadius: '0 0 1px 1px', position: 'absolute', top: '5px', left: '3px' }} />
+                    
+                    {/* Light Beam Effect */}
+                    {theme === 'light' && (
+                        <div style={{ position: 'absolute', top: '-15px', left: '-14px', width: '40px', height: '40px', background: 'radial-gradient(circle, rgba(241, 196, 15, 0.4) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                    )}
                 </div>
             </button>
         )}
